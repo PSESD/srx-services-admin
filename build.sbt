@@ -24,7 +24,8 @@ libraryDependencies ++= Seq(
 
 // JSON
 libraryDependencies ++= Seq(
-  "org.json4s" % "json4s-native_2.11" % json4sVersion
+  "org.json4s" % "json4s-native_2.11" % json4sVersion,
+  "org.json4s" % "json4s-jackson_2.11" % json4sVersion
 )
 
 // HTTP Client
