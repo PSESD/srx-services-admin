@@ -1,7 +1,7 @@
 machine:
   timezone: UTC
   java:
-    version: oraclejdk8
+    version: openjdk8
   environment:
     SBT_VERSION: 0.13.11
     SBT_OPTS: "-Xms512M -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled"
