@@ -32,4 +32,16 @@ test:
     - mkdir -p $CIRCLE_TEST_REPORTS/junit/
     - find . -type f -regex ".*/target/test-reports/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/junit/ \;
 
-
+deployment:
+  development:
+    branch: development
+    heroku:
+      appname: srx-services-admin-dev
+  test:
+    branch: test
+    heroku:
+      appname: srx-services-admin-test
+  production:
+    branch: production
+    heroku:
+      appname: srx-services-admin
