@@ -6,6 +6,7 @@ import org.apache.http.HttpStatus
 import org.http4s.dsl._
 import org.http4s.{Method, Request}
 import org.psesd.srx.shared.core.SrxMessage
+import org.psesd.srx.shared.core.config.Environment
 import org.psesd.srx.shared.core.extensions.HttpTypeExtensions._
 import org.psesd.srx.shared.core.extensions.TypeExtensions._
 import org.psesd.srx.shared.core.sif._
@@ -55,7 +56,7 @@ class AdminServerTests extends FunSuite {
   private val pendingInterrupts = new ThreadLocal[List[Thread]] {
     override def initialValue = Nil
   }
-  private val tempServer = Future {
+  private lazy val tempServer = Future {
     delayedInterrupt(ServerDuration)
     intercept[InterruptedException] {
       startServer()
@@ -81,42 +82,50 @@ class AdminServerTests extends FunSuite {
   }
 
   test("ping") {
-    val getPing = Request(Method.GET, uri("/ping"))
-    val task = AdminServer.service.run(getPing)
-    val response = task.run
-    val body = response.body.value
-    assert(response.status.code.equals(HttpStatus.SC_OK))
-    assert(body.equals(true.toString))
+    if(Environment.isLocal) {
+      val getPing = Request(Method.GET, uri("/ping"))
+      val task = AdminServer.service.run(getPing)
+      val response = task.run
+      val body = response.body.value
+      assert(response.status.code.equals(HttpStatus.SC_OK))
+      assert(body.equals(true.toString))
+    }
   }
 
   test("info (localhost)") {
-    val sifRequest = new SifRequest(TestValues.sifProvider, "info")
-    val response = new SifConsumer().query(sifRequest)
-    printlnResponse(response)
-    val responseBody = response.body.getOrElse("")
-    assert(response.statusCode.equals(HttpStatus.SC_OK))
-    assert(response.contentType.get.equals(SifContentType.Xml))
-    assert(responseBody.contains("<service>"))
+    if(Environment.isLocal) {
+      val sifRequest = new SifRequest(TestValues.sifProvider, "info")
+      val response = new SifConsumer().query(sifRequest)
+      printlnResponse(response)
+      val responseBody = response.body.getOrElse("")
+      assert(response.statusCode.equals(HttpStatus.SC_OK))
+      assert(response.contentType.get.equals(SifContentType.Xml))
+      assert(responseBody.contains("<service>"))
+    }
   }
 
   test("create message xml (localhost)") {
-    val sifRequest = new SifRequest(TestValues.sifProvider, "message")
-    sifRequest.generatorId = Some(generatorId)
-    sifRequest.body = Some(testMessage.toXml.toXmlString)
-    val response = new SifConsumer().create(sifRequest)
-    printlnResponse(response)
-    assert(response.statusCode.equals(HttpStatus.SC_CREATED))
+    if(Environment.isLocal) {
+      val sifRequest = new SifRequest(TestValues.sifProvider, "message")
+      sifRequest.generatorId = Some(generatorId)
+      sifRequest.body = Some(testMessage.toXml.toXmlString)
+      val response = new SifConsumer().create(sifRequest)
+      printlnResponse(response)
+      assert(response.statusCode.equals(HttpStatus.SC_CREATED))
+    }
   }
 
   test("create message json (localhost)") {
-    val sifRequest = new SifRequest(TestValues.sifProvider, "message")
-    sifRequest.accept = Some(SifContentType.Json)
-    sifRequest.contentType = Some(SifContentType.Json)
-    sifRequest.generatorId = Some(generatorId)
-    sifRequest.body = Some(testMessage.toXml.toJsonString)
-    val response = new SifConsumer().create(sifRequest)
-    printlnResponse(response)
-    assert(response.statusCode.equals(HttpStatus.SC_CREATED))
+    if(Environment.isLocal) {
+      val sifRequest = new SifRequest(TestValues.sifProvider, "message")
+      sifRequest.accept = Some(SifContentType.Json)
+      sifRequest.contentType = Some(SifContentType.Json)
+      sifRequest.generatorId = Some(generatorId)
+      sifRequest.body = Some(testMessage.toXml.toJsonString)
+      val response = new SifConsumer().create(sifRequest)
+      printlnResponse(response)
+      assert(response.statusCode.equals(HttpStatus.SC_CREATED))
+    }
   }
 
   private def delayedInterrupt(delay: Long) {
@@ -135,7 +144,9 @@ class AdminServerTests extends FunSuite {
   }
 
   private def startServer(): Unit = {
-    AdminServer.main(Array[String]())
+    if(Environment.isLocal) {
+      AdminServer.main(Array[String]())
+    }
   }
 
   private def printlnResponse(response: SifResponse): Unit = {
