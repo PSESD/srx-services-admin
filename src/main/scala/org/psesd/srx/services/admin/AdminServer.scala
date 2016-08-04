@@ -51,6 +51,9 @@ object AdminServer extends SrxServer {
     case req@GET -> Root / _ if req.pathInfo.startsWith("/info") =>
       respondWithInfo(getDefaultSrxResponse(req)).toHttpResponse
 
+    case req@GET -> Root / _ if req.pathInfo.startsWith("/message") =>
+      NotImplemented()
+
     case req@POST -> Root / _ if req.pathInfo.startsWith("/message") =>
       respondWithCreateMessage(getDefaultSrxResponse(req)).toHttpResponse
 
