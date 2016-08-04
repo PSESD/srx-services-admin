@@ -1,1 +1,0 @@
-web: target/start Main $JAVA_OPTS
