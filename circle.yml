@@ -22,7 +22,7 @@ dependencies:
     - which sbt
     - sbt sbt-version
   post:
-    - rm -r ~/.sbt
+    - rm -rf ~/.sbt
   override:
     - sbt test:compile
 
