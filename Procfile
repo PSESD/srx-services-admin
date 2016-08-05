@@ -1,1 +1,1 @@
-web: target/universal/stage/bin/srx-services-admin -Dhttp.port=${PORT}
+web: target/start -Dhttp.port=${PORT}
