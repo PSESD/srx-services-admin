@@ -3,6 +3,9 @@ package org.psesd.srx.services.admin
 import java.util.UUID
 
 import org.apache.http.HttpStatus
+import org.apache.http.client.methods.HttpGet
+import org.apache.http.impl.client.{CloseableHttpClient, HttpClients}
+import org.apache.http.util.EntityUtils
 import org.http4s.dsl._
 import org.http4s.{Method, Request}
 import org.psesd.srx.shared.core.SrxMessage
@@ -14,6 +17,7 @@ import org.scalatest.FunSuite
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.Success
 
 class AdminServerTests extends FunSuite {
 
@@ -89,6 +93,27 @@ class AdminServerTests extends FunSuite {
       val body = response.body.value
       assert(response.status.code.equals(HttpStatus.SC_OK))
       assert(body.equals(true.toString))
+    }
+  }
+
+  test("ping (localhost)") {
+    if(Environment.isLocal) {
+      val expected = "true"
+      var actual = ""
+      tempServer onComplete {
+        case Success(x) =>
+          assert(actual.equals(expected))
+        case _ =>
+      }
+
+      // wait for server to init
+      Thread.sleep(2000)
+
+      // ping server and collect response
+      val httpclient: CloseableHttpClient = HttpClients.custom().disableCookieManagement().build()
+      val httpGet = new HttpGet("http://localhost:%s/ping".format(Environment.getPropertyOrElse("SERVER_PORT", "80")))
+      val response = httpclient.execute(httpGet)
+      actual = EntityUtils.toString(response.getEntity)
     }
   }
 

@@ -1,1 +1,1 @@
-web: target/start Main $JAVA_OPTS
+web: target/universal/stage/bin/srx-services-admin -Dhttp.port=${PORT}
