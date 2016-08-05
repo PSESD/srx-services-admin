@@ -21,6 +21,8 @@ dependencies:
     - chmod u+x $HOME/bin/sbt
     - which sbt
     - sbt sbt-version
+  post:
+    - rm -r ~/.sbt
   override:
     - sbt test:compile
 
