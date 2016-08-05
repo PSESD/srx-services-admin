@@ -57,6 +57,12 @@ object AdminServer extends SrxServer {
     case req@POST -> Root / _ if req.pathInfo.startsWith("/message") =>
       respondWithCreateMessage(getDefaultSrxResponse(req)).toHttpResponse
 
+    case req@PUT -> Root / _ if req.pathInfo.startsWith("/message") =>
+      MethodNotAllowed()
+
+    case req@DELETE -> Root / _ if req.pathInfo.startsWith("/message") =>
+      MethodNotAllowed()
+
     case req@GET -> Root / _ if req.pathInfo.startsWith("/messages") =>
       NotImplemented()
 
