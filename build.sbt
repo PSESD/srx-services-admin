@@ -1,5 +1,3 @@
-import com.typesafe.sbt.SbtStartScript
-
 name := "srx-services-admin"
 
 version := "1.0"
@@ -42,8 +40,6 @@ libraryDependencies ++= Seq(
   "org.http4s" %% "http4s-blaze-client" % http4sVersion
 )
 
-Seq(SbtStartScript.startScriptForClassesSettings: _*)
-
 // Build info
 lazy val root = (project in file(".")).
   enablePlugins(BuildInfoPlugin).
@@ -57,3 +53,5 @@ lazy val root = (project in file(".")).
 
 lazy val srxCore = RootProject(uri("https://github.com/PSESD/srx-shared-core.git"))
 lazy val srxData = RootProject(uri("https://github.com/PSESD/srx-shared-data.git"))
+
+enablePlugins(JavaServerAppPackaging)
