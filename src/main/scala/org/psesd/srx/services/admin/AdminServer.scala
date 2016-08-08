@@ -18,13 +18,11 @@ import scala.concurrent.ExecutionContext
 object AdminServer extends SrxServer {
 
   private final val ServerUrlKey = "SERVER_URL"
-  private final val ServerSessionTokenKey = "SERVER_SESSION_TOKEN"
-  private final val ServerSharedSecretKey = "SERVER_SHARED_SECRET"
 
   val sifProvider: SifProvider = new SifProvider(
     SifProviderUrl(Environment.getProperty(ServerUrlKey)),
-    SifProviderSessionToken(Environment.getProperty(ServerSessionTokenKey)),
-    SifProviderSharedSecret(Environment.getProperty(ServerSharedSecretKey)),
+    SifProviderSessionToken(Environment.getProperty(Environment.SrxAdminSessionTokenKey)),
+    SifProviderSharedSecret(Environment.getProperty(Environment.SrxAdminSharedSecretKey)),
     SifAuthenticationMethod.SifHmacSha256
   )
 
@@ -93,13 +91,7 @@ object AdminServer extends SrxServer {
             errorMessage
           ))
         }
-        srxResponse.sifResponse.bodyXml = Option(
-          <createResponse>
-            <creates>
-              <create id={result.messageId.toString} advisoryId="1" statusCode={Created.code.toString}/>
-            </creates>
-          </createResponse>
-        )
+        srxResponse.sifResponse.bodyXml = Option(SifCreateResponse().addResult(result.messageId.toString, Created.code).toXml)
       } catch {
         case e: Exception =>
           srxResponse.setError(new SifError(
