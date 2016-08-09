@@ -21,8 +21,8 @@ object AdminServer extends SrxServer {
 
   val sifProvider: SifProvider = new SifProvider(
     SifProviderUrl(Environment.getProperty(ServerUrlKey)),
-    SifProviderSessionToken(Environment.getProperty(Environment.SrxAdminSessionTokenKey)),
-    SifProviderSharedSecret(Environment.getProperty(Environment.SrxAdminSharedSecretKey)),
+    SifProviderSessionToken(Environment.getProperty(Environment.SrxSessionTokenKey)),
+    SifProviderSharedSecret(Environment.getProperty(Environment.SrxSharedSecretKey)),
     SifAuthenticationMethod.SifHmacSha256
   )
 
@@ -34,6 +34,10 @@ object AdminServer extends SrxServer {
       new SrxServiceComponent("sbt", Build.sbtVersion)
     )
   )
+
+  override def createServerEventMessage(message: SrxMessage): Unit = {
+    MessageService.createMessage(message)
+  }
 
   override def serviceRouter(implicit executionContext: ExecutionContext) = HttpService {
 
