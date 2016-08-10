@@ -95,7 +95,7 @@ object AdminServer extends SrxServer {
             errorMessage
           ))
         }
-        srxResponse.sifResponse.bodyXml = Option(SifCreateResponse().addResult(result.messageId.toString, Created.code).toXml)
+        srxResponse.sifResponse.bodyXml = Option(SifCreateResponse().addResult(result.id.getOrElse(""), Created.code).toXml)
       } catch {
         case e: Exception =>
           srxResponse.setError(new SifError(

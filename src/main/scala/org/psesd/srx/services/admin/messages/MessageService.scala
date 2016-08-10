@@ -32,12 +32,14 @@ object MessageService {
 
     val datasource = new Datasource(datasourceConfig)
 
-    val result = datasource.execute(
+    val result = datasource.create(
       "insert into srx_services_admin.message (" +
         "message_id, message_time, component, component_version, resource, method, status, " +
         "generator_id, request_id, zone_id, context_id, student_id, description, " +
         "uri, source_ip, user_agent, headers, body) values (" +
-        "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+        "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+        "RETURNING message_id;",
+      "message_id",
       message.messageId.id,
       message.timestamp,
       message.srxService.service.name,
@@ -60,7 +62,7 @@ object MessageService {
 
     datasource.close()
 
-    MessageResult(message.messageId, result)
+    MessageResult(result)
   }
 
 }

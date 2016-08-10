@@ -47,6 +47,7 @@ class MessageServiceTests extends FunSuite {
     val result = MessageService.createMessage(message)
     assert(result.success)
     assert(result.exceptions.isEmpty)
+    assert(result.id.get.equals(messageId.toString))
   }
 
 }
