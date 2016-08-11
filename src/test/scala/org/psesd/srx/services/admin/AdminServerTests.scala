@@ -10,6 +10,7 @@ import org.http4s.dsl._
 import org.http4s.{Method, Request}
 import org.psesd.srx.shared.core.SrxMessage
 import org.psesd.srx.shared.core.config.Environment
+import org.psesd.srx.shared.core.exceptions.{ArgumentInvalidException, ExceptionMessage}
 import org.psesd.srx.shared.core.extensions.HttpTypeExtensions._
 import org.psesd.srx.shared.core.extensions.TypeExtensions._
 import org.psesd.srx.shared.core.sif._
@@ -150,6 +151,17 @@ class AdminServerTests extends FunSuite {
       val response = new SifConsumer().create(sifRequest)
       printlnResponse(response)
       assert(response.statusCode.equals(HttpStatus.SC_CREATED))
+    }
+  }
+
+  test("create message empty body") {
+    if(Environment.isLocal) {
+      val sifRequest = new SifRequest(TestValues.sifProvider, "message")
+      sifRequest.body = Some("")
+      val thrown = intercept[ArgumentInvalidException] {
+        SifConsumer().create(sifRequest)
+      }
+      assert(thrown.getMessage.equals(ExceptionMessage.IsInvalid.format("request body")))
     }
   }
 
