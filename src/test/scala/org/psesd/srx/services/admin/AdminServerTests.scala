@@ -165,6 +165,17 @@ class AdminServerTests extends FunSuite {
     }
   }
 
+  test("update message empty body") {
+    if(Environment.isLocal) {
+      val sifRequest = new SifRequest(TestValues.sifProvider, "message")
+      sifRequest.body = Some("")
+      val thrown = intercept[ArgumentInvalidException] {
+        SifConsumer().update(sifRequest)
+      }
+      assert(thrown.getMessage.equals(ExceptionMessage.IsInvalid.format("request body")))
+    }
+  }
+
   private def delayedInterrupt(delay: Long) {
     delayedInterrupt(Thread.currentThread, delay)
   }
