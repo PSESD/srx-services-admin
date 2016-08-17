@@ -3,7 +3,7 @@ package org.psesd.srx.services.admin.messages
 import org.psesd.srx.shared.core.SrxResourceResult
 import org.psesd.srx.shared.core.exceptions.ArgumentNullException
 import org.psesd.srx.shared.core.sif.SifRequestAction.SifRequestAction
-import org.psesd.srx.shared.core.sif.{SifCreateResponse, SifRequestAction}
+import org.psesd.srx.shared.core.sif.{SifCreateResponse, SifHttpStatusCode, SifRequestAction}
 import org.psesd.srx.shared.data.DatasourceResult
 
 import scala.xml.Node
@@ -14,37 +14,15 @@ import scala.xml.Node
   * @since 1.0
   * @author Stephen Pugmire (iTrellis, LLC)
   * */
-class MessageResult(requestAction: SifRequestAction, result: DatasourceResult) extends SrxResourceResult {
+class MessageResult(requestAction: SifRequestAction, httpStatusCode: Int, result: DatasourceResult) extends SrxResourceResult {
   if (requestAction == null) {
     throw new ArgumentNullException("request action")
   }
 
-  if(result != null) {
+  statusCode = httpStatusCode
+
+  if (result != null) {
     exceptions ++= result.exceptions
-  }
-
-  statusCode = {
-
-    requestAction match {
-
-      case SifRequestAction.Create =>
-        if (success && result != null) {
-          SifRequestAction.getSuccessStatusCode(requestAction)
-        } else {
-          500
-        }
-
-      case SifRequestAction.Query =>
-        if (success && result != null && result.rows.nonEmpty) {
-          SifRequestAction.getSuccessStatusCode(requestAction)
-        } else {
-          if (success && (result == null || result.rows.isEmpty)) {
-            404
-          } else {
-            400
-          }
-        }
-    }
   }
 
   def toXml: Option[Node] = {
@@ -55,15 +33,18 @@ class MessageResult(requestAction: SifRequestAction, result: DatasourceResult) e
         Option(SifCreateResponse().addResult(result.id.getOrElse(""), statusCode).toXml)
 
       case SifRequestAction.Query =>
-        if (statusCode == 200) {
+        if (statusCode == SifHttpStatusCode.Ok) {
           Option(<messages>{MessageService.getMessagesFromResult(result).map(m => m.toXml)}</messages>)
         } else {
           None
         }
+
+      case _ =>
+        None
     }
   }
 }
 
 object MessageResult {
-  def apply(requestAction: SifRequestAction, result: DatasourceResult): MessageResult = new MessageResult(requestAction, result)
+  def apply(requestAction: SifRequestAction, httpStatusCode: Int, result: DatasourceResult): MessageResult = new MessageResult(requestAction, httpStatusCode, result)
 }

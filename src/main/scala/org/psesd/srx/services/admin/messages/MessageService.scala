@@ -2,10 +2,12 @@ package org.psesd.srx.services.admin.messages
 
 import java.util.UUID
 
+import org.psesd.srx.services.admin.AdminServer
 import org.psesd.srx.shared.core._
 import org.psesd.srx.shared.core.config.Environment
 import org.psesd.srx.shared.core.exceptions.{ArgumentInvalidException, ArgumentNullException}
 import org.psesd.srx.shared.core.extensions.TypeExtensions._
+import org.psesd.srx.shared.core.logging.{LogLevel, Logger}
 import org.psesd.srx.shared.core.sif._
 import org.psesd.srx.shared.data._
 
@@ -16,7 +18,7 @@ import scala.collection.mutable.ArrayBuffer
   * @version 1.0
   * @since 1.0
   * @author Stephen Pugmire (iTrellis, LLC)
-  **/
+  * */
 object MessageService extends SrxResourceService {
 
   private final val DatasourceClassNameKey = "DATASOURCE_CLASS_NAME"
@@ -32,95 +34,94 @@ object MessageService extends SrxResourceService {
   )
 
   def delete(parameters: List[SifRequestParameter]): SrxResourceResult = {
-    throw new NotImplementedError("SrxMessage DELETE not implemented.")
+    SrxResourceErrorResult(SifHttpStatusCode.MethodNotAllowed, new UnsupportedOperationException(CoreResource.SrxMessages.toString + " DELETE method not allowed."))
   }
 
   def create(resource: SrxResource, parameters: List[SifRequestParameter]): SrxResourceResult = {
-    if (resource == null) {
-      throw new ArgumentNullException("resource parameter")
-    }
-
-    val message = resource.asInstanceOf[SrxMessage]
-
-    val datasource = new Datasource(datasourceConfig)
-
-    val result = datasource.create(
-      "insert into srx_services_admin.message (" +
-        "message_id, message_time, component, component_version, resource, method, status, " +
-        "generator_id, request_id, zone_id, context_id, student_id, description, " +
-        "uri, source_ip, user_agent, headers, body) values (" +
-        "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
-        "RETURNING message_id;",
-      "message_id",
-      message.messageId.id,
-      message.timestamp,
-      message.srxService.service.name,
-      message.srxService.service.version,
-      message.resource.getOrElse(""),
-      message.method.getOrElse(""),
-      message.status.getOrElse(""),
-      message.getGeneratorId,
-      message.getRequestId,
-      message.getZoneId,
-      message.getContextId,
-      message.studentId.getOrElse(""),
-      message.description,
-      message.getUri,
-      message.getSourceIp,
-      message.getUserAgent,
-      message.getHeaders,
-      message.getBody
-    )
-
-    datasource.close()
-
-    MessageResult(SifRequestAction.Create, result)
-  }
-
-  def query(parameters: List[SifRequestParameter]): SrxResourceResult = {
-    var id: UUID = null
-    var result: SrxResourceResult = MessageResult(SifRequestAction.Query, null)
-
     try {
-      if (parameters != null && parameters.nonEmpty) {
-        val idParameter = parameters.find(p => p.key == "id").orNull
-        if (idParameter != null) {
-          id = SifMessageId(idParameter.value).id
-        }
+      if (resource == null) {
+        throw new ArgumentNullException("resource parameter")
+      }
+
+      val message = resource.asInstanceOf[SrxMessage]
+
+      val datasource = new Datasource(datasourceConfig)
+
+      val result = datasource.create(
+        "insert into srx_services_admin.message (" +
+          "message_id, message_time, component, component_version, resource, method, status, " +
+          "generator_id, request_id, zone_id, context_id, student_id, description, " +
+          "uri, source_ip, user_agent, headers, body) values (" +
+          "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+          "RETURNING message_id;",
+        "message_id",
+        message.messageId.id,
+        message.timestamp,
+        message.srxService.service.name,
+        message.srxService.service.version,
+        message.resource.getOrElse(""),
+        message.method.getOrElse(""),
+        message.status.getOrElse(""),
+        message.getGeneratorId,
+        message.getRequestId,
+        message.getZoneId,
+        message.getContextId,
+        message.studentId.getOrElse(""),
+        message.description,
+        message.getUri,
+        message.getSourceIp,
+        message.getUserAgent,
+        message.getHeaders,
+        message.getBody
+      )
+
+      datasource.close()
+
+      if (result.success) {
+        MessageResult(SifRequestAction.Create, SifRequestAction.getSuccessStatusCode(SifRequestAction.Create), result)
+      } else {
+        throw result.exceptions.head
       }
     } catch {
       case e: Exception =>
+        // Logger.log(LogLevel.Error, "Failed to %s %s.".format(SifRequestAction.Create.toString, CoreResource.SrxMessages.toString), e.getMessage, AdminServer.srxService)
+        SrxResourceErrorResult(SifHttpStatusCode.InternalServerError, new Exception(""))
     }
+  }
 
-    if(id != null) {
+  def query(parameters: List[SifRequestParameter]): SrxResourceResult = {
+    val id = getMessageIdFromRequestParameters(parameters)
+    if (id == null) {
+      SrxResourceErrorResult(SifHttpStatusCode.BadRequest, new ArgumentInvalidException("id parameter"))
+    } else {
       try {
         val datasource = new Datasource(datasourceConfig)
-        val queryResut = datasource.get("select * from srx_services_admin.message where message_id = ?", id)
+        val result = datasource.get("select * from srx_services_admin.message where message_id = ?", id)
         datasource.close()
-        result = MessageResult(SifRequestAction.Query, queryResut)
-        if(result.statusCode == 404) {
-          result.exceptions += new Exception("Message not found.")
+        if (result.success) {
+          if (result.rows.isEmpty) {
+            SrxResourceErrorResult(SifHttpStatusCode.NotFound, new Exception("%s not found.".format(CoreResource.SrxMessages.toString)))
+          } else {
+            MessageResult(SifRequestAction.Query, SifHttpStatusCode.Ok, result)
+          }
+        } else {
+          throw result.exceptions.head
         }
       } catch {
         case e: Exception =>
-          result.exceptions += e
-          result.statusCode = 500
+          // Logger.log(LogLevel.Error, "Failed to %s %s.".format(SifRequestAction.Create.toString, CoreResource.SrxMessages.toString), e.getMessage, AdminServer.srxService)
+          SrxResourceErrorResult(SifHttpStatusCode.InternalServerError, new Exception(""))
       }
-    } else {
-      result.exceptions += new ArgumentInvalidException("id parameter")
-      result.statusCode = 400
     }
-
-    result
   }
 
   def update(resource: SrxResource, parameters: List[SifRequestParameter]): SrxResourceResult = {
-    throw new NotImplementedError("SrxMessage UPDATE not implemented.")
+    SrxResourceErrorResult(SifHttpStatusCode.MethodNotAllowed, new UnsupportedOperationException(CoreResource.SrxMessages.toString + " UPDATE method not allowed."))
   }
 
   def getMessagesFromResult(result: DatasourceResult): List[SrxMessage] = {
     val messages = ArrayBuffer[SrxMessage]()
-    for(row <- result.rows) {
+    for (row <- result.rows) {
       val message = new SrxMessage(
         new SrxService(
           new SrxServiceComponent(
@@ -155,6 +156,21 @@ object MessageService extends SrxResourceService {
       messages += message
     }
     messages.toList
+  }
+
+  private def getMessageIdFromRequestParameters(parameters: List[SifRequestParameter]): UUID = {
+    var id: UUID = null
+    try {
+      if (parameters != null && parameters.nonEmpty) {
+        val idParameter = parameters.find(p => p.key == "id").orNull
+        if (idParameter != null) {
+          id = SifMessageId(idParameter.value).id
+        }
+      }
+    } catch {
+      case e: Exception =>
+    }
+    id
   }
 
 }

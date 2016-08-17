@@ -42,8 +42,6 @@ object AdminServer extends SrxServer {
 
   override def serviceRouter(implicit executionContext: ExecutionContext) = HttpService {
 
-
-
     case req@GET -> Root =>
       Ok()
 
@@ -56,6 +54,9 @@ object AdminServer extends SrxServer {
     case req@GET -> Root / _ if services(req, CoreResource.Info.toString) =>
       respondWithInfo(getDefaultSrxResponse(req))
 
+    case req@GET -> Root / _ if services(req, messagesResource) =>
+      MethodNotAllowed()
+
     case req@GET -> Root / `messagesResource` / _ =>
       executeRequest(req, messagesResource, MessageService)
 
@@ -63,6 +64,12 @@ object AdminServer extends SrxServer {
       executeRequest(req, messagesResource, MessageService, SrxMessage.apply)
 
     case req@PUT -> Root / _ if services(req, messagesResource) =>
+      MethodNotAllowed()
+
+    case req@PUT -> Root / `messagesResource` / _ =>
+      MethodNotAllowed()
+
+    case req@DELETE -> Root / _ if services(req, messagesResource) =>
       MethodNotAllowed()
 
     case req@DELETE -> Root / `messagesResource` / _ =>

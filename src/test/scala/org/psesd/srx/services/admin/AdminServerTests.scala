@@ -83,7 +83,7 @@ class AdminServerTests extends FunSuite {
     val getRoot = Request(Method.GET, uri("/"))
     val task = AdminServer.service.run(getRoot)
     val response = task.run
-    assert(response.status.code.equals(HttpStatus.SC_OK))
+    assert(response.status.code.equals(SifHttpStatusCode.Ok))
   }
 
   test("ping") {
@@ -92,7 +92,7 @@ class AdminServerTests extends FunSuite {
       val task = AdminServer.service.run(getPing)
       val response = task.run
       val body = response.body.value
-      assert(response.status.code.equals(HttpStatus.SC_OK))
+      assert(response.status.code.equals(SifHttpStatusCode.Ok))
       assert(body.equals(true.toString))
     }
   }
@@ -124,7 +124,7 @@ class AdminServerTests extends FunSuite {
       val response = new SifConsumer().query(sifRequest)
       printlnResponse(response)
       val responseBody = response.body.getOrElse("")
-      assert(response.statusCode.equals(HttpStatus.SC_OK))
+      assert(response.statusCode.equals(SifHttpStatusCode.Ok))
       assert(response.contentType.get.equals(SifContentType.Xml))
       assert(responseBody.contains("<service>"))
     }
@@ -137,7 +137,7 @@ class AdminServerTests extends FunSuite {
       sifRequest.body = Some(testMessage.toXml.toXmlString)
       val response = new SifConsumer().create(sifRequest)
       printlnResponse(response)
-      assert(response.statusCode.equals(HttpStatus.SC_CREATED))
+      assert(response.statusCode.equals(SifHttpStatusCode.Created))
     }
   }
 
@@ -150,7 +150,7 @@ class AdminServerTests extends FunSuite {
       sifRequest.body = Some(testMessage.toXml.toJsonString)
       val response = new SifConsumer().create(sifRequest)
       printlnResponse(response)
-      assert(response.statusCode.equals(HttpStatus.SC_CREATED))
+      assert(response.statusCode.equals(SifHttpStatusCode.Created))
     }
   }
 
@@ -173,6 +173,17 @@ class AdminServerTests extends FunSuite {
         SifConsumer().update(sifRequest)
       }
       assert(thrown.getMessage.equals(ExceptionMessage.IsInvalid.format("request body")))
+    }
+  }
+
+  test("query message") {
+    if(Environment.isLocal) {
+      val resource = CoreResource.SrxMessages.toString + "/" + testMessage.messageId.toString
+      val sifRequest = new SifRequest(TestValues.sifProvider, resource)
+      sifRequest.generatorId = Some(generatorId)
+      val response = new SifConsumer().query(sifRequest)
+      printlnResponse(response)
+      assert(response.statusCode.equals(SifHttpStatusCode.Ok))
     }
   }
 

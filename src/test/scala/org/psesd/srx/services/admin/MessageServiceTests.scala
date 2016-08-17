@@ -55,21 +55,21 @@ class MessageServiceTests extends FunSuite {
   test("query bad request") {
     val result = MessageService.query(List[SifRequestParameter](SifRequestParameter("id", "123")))
     assert(!result.success)
-    assert(result.statusCode == 400)
+    assert(result.statusCode == SifHttpStatusCode.Ok)
     assert(result.toXml.isEmpty)
   }
 
   test("query not found") {
     val result = MessageService.query(List[SifRequestParameter](SifRequestParameter("id", "13345ffe-ffd8-4c72-a699-a84b08f060e8")))
     assert(!result.success)
-    assert(result.statusCode == 404)
+    assert(result.statusCode == SifHttpStatusCode.NotFound)
     assert(result.toXml.isEmpty)
   }
 
   test("query by id") {
     val result = MessageService.query(List[SifRequestParameter](SifRequestParameter("id", messageId.toString)))
     assert(result.success)
-    assert(result.statusCode == 200)
+    assert(result.statusCode == SifHttpStatusCode.Ok)
     assert(result.toXml.nonEmpty)
   }
 
