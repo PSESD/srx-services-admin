@@ -1,14 +1,16 @@
 package org.psesd.srx.services.admin
 
 import org.psesd.srx.services.admin.messages.MessageService
+import org.psesd.srx.shared.core.extensions.TypeExtensions._
 import org.psesd.srx.shared.core.SrxMessage
-import org.psesd.srx.shared.core.sif.{SifContext, SifMessageId, SifTimestamp, SifZone}
+import org.psesd.srx.shared.core.sif._
 import org.scalatest.FunSuite
 
 class MessageServiceTests extends FunSuite {
 
+  val messageId = SifMessageId()
+
   test("create") {
-    val messageId = SifMessageId()
     val timestamp = SifTimestamp()
     val resource = "xSre"
     val method = "query"
@@ -44,10 +46,31 @@ class MessageServiceTests extends FunSuite {
       Some(body)
     )
 
-    val result = MessageService.createMessage(message)
+    val result = MessageService.create(message, List[SifRequestParameter]())
     assert(result.success)
     assert(result.exceptions.isEmpty)
-    assert(result.id.get.equals(messageId.toString))
+    assert(result.toXml.get.toXmlString.contains(messageId.toString))
+  }
+
+  test("query bad request") {
+    val result = MessageService.query(List[SifRequestParameter](SifRequestParameter("id", "123")))
+    assert(!result.success)
+    assert(result.statusCode == 400)
+    assert(result.toXml.isEmpty)
+  }
+
+  test("query not found") {
+    val result = MessageService.query(List[SifRequestParameter](SifRequestParameter("id", "13345ffe-ffd8-4c72-a699-a84b08f060e8")))
+    assert(!result.success)
+    assert(result.statusCode == 404)
+    assert(result.toXml.isEmpty)
+  }
+
+  test("query by id") {
+    val result = MessageService.query(List[SifRequestParameter](SifRequestParameter("id", messageId.toString)))
+    assert(result.success)
+    assert(result.statusCode == 200)
+    assert(result.toXml.nonEmpty)
   }
 
 }

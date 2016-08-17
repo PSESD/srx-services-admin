@@ -18,6 +18,7 @@ import scala.concurrent.ExecutionContext
 object AdminServer extends SrxServer {
 
   private final val ServerUrlKey = "SERVER_URL"
+  private val messagesResource = CoreResource.SrxMessages.toString
 
   val sifProvider: SifProvider = new SifProvider(
     SifProviderUrl(Environment.getProperty(ServerUrlKey)),
@@ -36,10 +37,12 @@ object AdminServer extends SrxServer {
   )
 
   override def createServerEventMessage(message: SrxMessage): Unit = {
-    MessageService.createMessage(message)
+    MessageService.create(message, List[SifRequestParameter]())
   }
 
   override def serviceRouter(implicit executionContext: ExecutionContext) = HttpService {
+
+
 
     case req@GET -> Root =>
       Ok()
@@ -47,65 +50,27 @@ object AdminServer extends SrxServer {
     case _ -> Root =>
       NotImplemented()
 
-    case GET -> Root / "ping" =>
+    case req@GET -> Root / _ if services(req, CoreResource.Ping.toString) =>
       Ok(true.toString)
 
-    case req@GET -> Root / _ if req.pathInfo.startsWith("/info") =>
-      respondWithInfo(getDefaultSrxResponse(req)).toHttpResponse
+    case req@GET -> Root / _ if services(req, CoreResource.Info.toString) =>
+      respondWithInfo(getDefaultSrxResponse(req))
 
-    case req@GET -> Root / _ if req.pathInfo.startsWith("/message") =>
-      NotImplemented()
+    case req@GET -> Root / `messagesResource` / _ =>
+      executeRequest(req, messagesResource, MessageService)
 
-    case req@POST -> Root / _ if req.pathInfo.startsWith("/message") =>
-      respondWithCreateMessage(getDefaultSrxResponse(req)).toHttpResponse
+    case req@POST -> Root / _ if services(req, messagesResource) =>
+      executeRequest(req, messagesResource, MessageService, SrxMessage.apply)
 
-    case req@PUT -> Root / _ if req.pathInfo.startsWith("/message") =>
+    case req@PUT -> Root / _ if services(req, messagesResource) =>
       MethodNotAllowed()
 
-    case req@DELETE -> Root / _ if req.pathInfo.startsWith("/message") =>
+    case req@DELETE -> Root / `messagesResource` / _ =>
       MethodNotAllowed()
-
-    case req@GET -> Root / _ if req.pathInfo.startsWith("/messages") =>
-      NotImplemented()
 
     case _ =>
       NotFound()
 
   }
 
-  private def respondWithCreateMessage(srxResponse: SrxResponse): SrxResponse = {
-    if (!srxResponse.hasError) {
-      try {
-
-        val result = MessageService.createMessage(SrxMessage(srxResponse.srxRequest.getBodyXml.orNull))
-        if(result.success) {
-          srxResponse.sifResponse.statusCode = Created.code
-        } else {
-          val errorMessage = {
-            if(result.exceptions.nonEmpty) {
-              result.exceptions.head.getMessage
-            } else {
-              ""
-            }
-          }
-          srxResponse.setError(new SifError(
-            InternalServerError.code,
-            "Message",
-            "Failed to create message.",
-            errorMessage
-          ))
-        }
-        srxResponse.sifResponse.bodyXml = Option(SifCreateResponse().addResult(result.id.getOrElse(""), Created.code).toXml)
-      } catch {
-        case e: Exception =>
-          srxResponse.setError(new SifError(
-            InternalServerError.code,
-            "Message",
-            "Failed to create message.",
-            e.getMessage
-          ))
-      }
-    }
-    srxResponse
-  }
 }

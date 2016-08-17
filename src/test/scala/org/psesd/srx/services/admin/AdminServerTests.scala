@@ -8,7 +8,7 @@ import org.apache.http.impl.client.{CloseableHttpClient, HttpClients}
 import org.apache.http.util.EntityUtils
 import org.http4s.dsl._
 import org.http4s.{Method, Request}
-import org.psesd.srx.shared.core.SrxMessage
+import org.psesd.srx.shared.core.{CoreResource, SrxMessage}
 import org.psesd.srx.shared.core.config.Environment
 import org.psesd.srx.shared.core.exceptions.{ArgumentInvalidException, ExceptionMessage}
 import org.psesd.srx.shared.core.extensions.HttpTypeExtensions._
@@ -120,7 +120,7 @@ class AdminServerTests extends FunSuite {
 
   test("info (localhost)") {
     if(Environment.isLocal) {
-      val sifRequest = new SifRequest(TestValues.sifProvider, "info")
+      val sifRequest = new SifRequest(TestValues.sifProvider, CoreResource.Info.toString)
       val response = new SifConsumer().query(sifRequest)
       printlnResponse(response)
       val responseBody = response.body.getOrElse("")
@@ -132,7 +132,7 @@ class AdminServerTests extends FunSuite {
 
   test("create message xml (localhost)") {
     if(Environment.isLocal) {
-      val sifRequest = new SifRequest(TestValues.sifProvider, "message")
+      val sifRequest = new SifRequest(TestValues.sifProvider, CoreResource.SrxMessages.toString)
       sifRequest.generatorId = Some(generatorId)
       sifRequest.body = Some(testMessage.toXml.toXmlString)
       val response = new SifConsumer().create(sifRequest)
@@ -143,7 +143,7 @@ class AdminServerTests extends FunSuite {
 
   test("create message json (localhost)") {
     if(Environment.isLocal) {
-      val sifRequest = new SifRequest(TestValues.sifProvider, "message")
+      val sifRequest = new SifRequest(TestValues.sifProvider, CoreResource.SrxMessages.toString)
       sifRequest.accept = Some(SifContentType.Json)
       sifRequest.contentType = Some(SifContentType.Json)
       sifRequest.generatorId = Some(generatorId)
@@ -156,7 +156,7 @@ class AdminServerTests extends FunSuite {
 
   test("create message empty body") {
     if(Environment.isLocal) {
-      val sifRequest = new SifRequest(TestValues.sifProvider, "message")
+      val sifRequest = new SifRequest(TestValues.sifProvider, CoreResource.SrxMessages.toString)
       sifRequest.body = Some("")
       val thrown = intercept[ArgumentInvalidException] {
         SifConsumer().create(sifRequest)
@@ -167,7 +167,7 @@ class AdminServerTests extends FunSuite {
 
   test("update message empty body") {
     if(Environment.isLocal) {
-      val sifRequest = new SifRequest(TestValues.sifProvider, "message")
+      val sifRequest = new SifRequest(TestValues.sifProvider, CoreResource.SrxMessages.toString)
       sifRequest.body = Some("")
       val thrown = intercept[ArgumentInvalidException] {
         SifConsumer().update(sifRequest)
