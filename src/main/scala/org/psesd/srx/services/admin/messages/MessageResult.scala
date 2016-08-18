@@ -3,7 +3,7 @@ package org.psesd.srx.services.admin.messages
 import org.psesd.srx.shared.core.SrxResourceResult
 import org.psesd.srx.shared.core.exceptions.ArgumentNullException
 import org.psesd.srx.shared.core.sif.SifRequestAction.SifRequestAction
-import org.psesd.srx.shared.core.sif.{SifCreateResponse, SifHttpStatusCode, SifRequestAction}
+import org.psesd.srx.shared.core.sif._
 import org.psesd.srx.shared.data.DatasourceResult
 
 import scala.xml.Node
@@ -13,7 +13,7 @@ import scala.xml.Node
   * @version 1.0
   * @since 1.0
   * @author Stephen Pugmire (iTrellis, LLC)
-  * */
+  **/
 class MessageResult(requestAction: SifRequestAction, httpStatusCode: Int, result: DatasourceResult) extends SrxResourceResult {
   if (requestAction == null) {
     throw new ArgumentNullException("request action")
@@ -34,7 +34,7 @@ class MessageResult(requestAction: SifRequestAction, httpStatusCode: Int, result
 
       case SifRequestAction.Query =>
         if (statusCode == SifHttpStatusCode.Ok) {
-          Option(<messages>{MessageService.getMessagesFromResult(result).map(m => m.toXml)}</messages>)
+          Option(<messages>{MessageService.getMessagesFromDataResult(result).map(m => m.toXml)}</messages>)
         } else {
           None
         }
@@ -43,6 +43,7 @@ class MessageResult(requestAction: SifRequestAction, httpStatusCode: Int, result
         None
     }
   }
+
 }
 
 object MessageResult {

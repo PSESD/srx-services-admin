@@ -2,12 +2,10 @@ package org.psesd.srx.services.admin.messages
 
 import java.util.UUID
 
-import org.psesd.srx.services.admin.AdminServer
 import org.psesd.srx.shared.core._
 import org.psesd.srx.shared.core.config.Environment
-import org.psesd.srx.shared.core.exceptions.{ArgumentInvalidException, ArgumentNullException}
+import org.psesd.srx.shared.core.exceptions.{ArgumentInvalidException, ArgumentNullException, SrxRequestActionNotAllowedException, SrxResourceNotFoundException}
 import org.psesd.srx.shared.core.extensions.TypeExtensions._
-import org.psesd.srx.shared.core.logging.{LogLevel, Logger}
 import org.psesd.srx.shared.core.sif._
 import org.psesd.srx.shared.data._
 
@@ -18,7 +16,7 @@ import scala.collection.mutable.ArrayBuffer
   * @version 1.0
   * @since 1.0
   * @author Stephen Pugmire (iTrellis, LLC)
-  * */
+  **/
 object MessageService extends SrxResourceService {
 
   private final val DatasourceClassNameKey = "DATASOURCE_CLASS_NAME"
@@ -34,7 +32,7 @@ object MessageService extends SrxResourceService {
   )
 
   def delete(parameters: List[SifRequestParameter]): SrxResourceResult = {
-    SrxResourceErrorResult(SifHttpStatusCode.MethodNotAllowed, new UnsupportedOperationException(CoreResource.SrxMessages.toString + " DELETE method not allowed."))
+    SrxResourceErrorResult(SifHttpStatusCode.MethodNotAllowed, new SrxRequestActionNotAllowedException(SifRequestAction.Delete, CoreResource.SrxMessages.toString))
   }
 
   def create(resource: SrxResource, parameters: List[SifRequestParameter]): SrxResourceResult = {
@@ -84,8 +82,7 @@ object MessageService extends SrxResourceService {
       }
     } catch {
       case e: Exception =>
-        // Logger.log(LogLevel.Error, "Failed to %s %s.".format(SifRequestAction.Create.toString, CoreResource.SrxMessages.toString), e.getMessage, AdminServer.srxService)
-        SrxResourceErrorResult(SifHttpStatusCode.InternalServerError, new Exception(""))
+        SrxResourceErrorResult(SifHttpStatusCode.InternalServerError, e)
     }
   }
 
@@ -100,7 +97,7 @@ object MessageService extends SrxResourceService {
         datasource.close()
         if (result.success) {
           if (result.rows.isEmpty) {
-            SrxResourceErrorResult(SifHttpStatusCode.NotFound, new Exception("%s not found.".format(CoreResource.SrxMessages.toString)))
+            SrxResourceErrorResult(SifHttpStatusCode.NotFound, new SrxResourceNotFoundException(CoreResource.SrxMessages.toString))
           } else {
             MessageResult(SifRequestAction.Query, SifHttpStatusCode.Ok, result)
           }
@@ -109,17 +106,16 @@ object MessageService extends SrxResourceService {
         }
       } catch {
         case e: Exception =>
-          // Logger.log(LogLevel.Error, "Failed to %s %s.".format(SifRequestAction.Create.toString, CoreResource.SrxMessages.toString), e.getMessage, AdminServer.srxService)
-          SrxResourceErrorResult(SifHttpStatusCode.InternalServerError, new Exception(""))
+          SrxResourceErrorResult(SifHttpStatusCode.InternalServerError, e)
       }
     }
   }
 
   def update(resource: SrxResource, parameters: List[SifRequestParameter]): SrxResourceResult = {
-    SrxResourceErrorResult(SifHttpStatusCode.MethodNotAllowed, new UnsupportedOperationException(CoreResource.SrxMessages.toString + " UPDATE method not allowed."))
+    SrxResourceErrorResult(SifHttpStatusCode.MethodNotAllowed, new SrxRequestActionNotAllowedException(SifRequestAction.Update, CoreResource.SrxMessages.toString))
   }
 
-  def getMessagesFromResult(result: DatasourceResult): List[SrxMessage] = {
+  def getMessagesFromDataResult(result: DatasourceResult): List[SrxMessage] = {
     val messages = ArrayBuffer[SrxMessage]()
     for (row <- result.rows) {
       val message = new SrxMessage(
@@ -161,11 +157,9 @@ object MessageService extends SrxResourceService {
   private def getMessageIdFromRequestParameters(parameters: List[SifRequestParameter]): UUID = {
     var id: UUID = null
     try {
-      if (parameters != null && parameters.nonEmpty) {
-        val idParameter = parameters.find(p => p.key == "id").orNull
-        if (idParameter != null) {
-          id = SifMessageId(idParameter.value).id
-        }
+      val idValue = getIdFromRequestParameters(parameters)
+      if (idValue.isDefined) {
+        id = SifMessageId(idValue.get).id
       }
     } catch {
       case e: Exception =>
