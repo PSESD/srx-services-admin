@@ -55,7 +55,7 @@ class MessageServiceTests extends FunSuite {
   test("query bad request") {
     val result = MessageService.query(List[SifRequestParameter](SifRequestParameter("id", "123")))
     assert(!result.success)
-    assert(result.statusCode == SifHttpStatusCode.Ok)
+    assert(result.statusCode == SifHttpStatusCode.BadRequest)
     assert(result.toXml.isEmpty)
   }
 

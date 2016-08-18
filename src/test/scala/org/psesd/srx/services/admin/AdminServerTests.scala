@@ -22,7 +22,7 @@ import scala.util.Success
 
 class AdminServerTests extends FunSuite {
 
-  private final val ServerDuration = 5000
+  private final val ServerDuration = 8000
   val messageId = SifMessageId()
   val timestamp = SifTimestamp()
   val resource = "message"
@@ -79,24 +79,6 @@ class AdminServerTests extends FunSuite {
     assert(AdminServer.srxService.buildComponents(2).version.equals(Build.sbtVersion))
   }
 
-  test("root") {
-    val getRoot = Request(Method.GET, uri("/"))
-    val task = AdminServer.service.run(getRoot)
-    val response = task.run
-    assert(response.status.code.equals(SifHttpStatusCode.Ok))
-  }
-
-  test("ping") {
-    if(Environment.isLocal) {
-      val getPing = Request(Method.GET, uri("/ping"))
-      val task = AdminServer.service.run(getPing)
-      val response = task.run
-      val body = response.body.value
-      assert(response.status.code.equals(SifHttpStatusCode.Ok))
-      assert(body.equals(true.toString))
-    }
-  }
-
   test("ping (localhost)") {
     if(Environment.isLocal) {
       val expected = "true"
@@ -115,6 +97,24 @@ class AdminServerTests extends FunSuite {
       val httpGet = new HttpGet("http://localhost:%s/ping".format(Environment.getPropertyOrElse("SERVER_PORT", "80")))
       val response = httpclient.execute(httpGet)
       actual = EntityUtils.toString(response.getEntity)
+    }
+  }
+
+  test("root") {
+    val getRoot = Request(Method.GET, uri("/"))
+    val task = AdminServer.service.run(getRoot)
+    val response = task.run
+    assert(response.status.code.equals(SifHttpStatusCode.Ok))
+  }
+
+  test("ping") {
+    if(Environment.isLocal) {
+      val getPing = Request(Method.GET, uri("/ping"))
+      val task = AdminServer.service.run(getPing)
+      val response = task.run
+      val body = response.body.value
+      assert(response.status.code.equals(SifHttpStatusCode.Ok))
+      assert(body.equals(true.toString))
     }
   }
 
