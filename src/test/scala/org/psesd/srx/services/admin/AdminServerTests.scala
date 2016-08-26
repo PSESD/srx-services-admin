@@ -2,7 +2,6 @@ package org.psesd.srx.services.admin
 
 import java.util.UUID
 
-import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.impl.client.{CloseableHttpClient, HttpClients}
 import org.apache.http.util.EntityUtils
@@ -181,6 +180,7 @@ class AdminServerTests extends FunSuite {
       val resource = CoreResource.SrxMessages.toString + "/" + testMessage.messageId.toString
       val sifRequest = new SifRequest(TestValues.sifProvider, resource)
       sifRequest.generatorId = Some(generatorId)
+      sifRequest.accept = Some(SifContentType.Json)
       val response = new SifConsumer().query(sifRequest)
       printlnResponse(response)
       assert(response.statusCode.equals(SifHttpStatusCode.Ok))
