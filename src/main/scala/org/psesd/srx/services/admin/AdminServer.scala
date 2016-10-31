@@ -2,6 +2,7 @@ package org.psesd.srx.services.admin
 
 import org.http4s._
 import org.http4s.dsl._
+import org.psesd.srx.services.admin.config.ZoneConfig
 import org.psesd.srx.services.admin.messages.MessageService
 import org.psesd.srx.shared.core.config.Environment
 import org.psesd.srx.shared.core.sif._
@@ -19,6 +20,7 @@ object AdminServer extends SrxServer {
 
   private final val ServerUrlKey = "SERVER_URL"
   private val messagesResource = CoreResource.SrxMessages.toString
+  private val zoneConfigResource = "zoneconfig"
 
   val sifProvider: SifProvider = new SifProvider(
     SifProviderUrl(Environment.getProperty(ServerUrlKey)),
@@ -54,14 +56,17 @@ object AdminServer extends SrxServer {
     case req@GET -> Root / _ if services(req, CoreResource.Info.toString) =>
       respondWithInfo(getDefaultSrxResponse(req))
 
+
+    /* MESSAGES */
+
     case req@GET -> Root / _ if services(req, messagesResource) =>
       MethodNotAllowed()
 
     case req@GET -> Root / `messagesResource` / _ =>
-      executeRequest(req, messagesResource, MessageService)
+      executeRequest(req, None, messagesResource, MessageService)
 
     case req@POST -> Root / _ if services(req, messagesResource) =>
-      executeRequest(req, messagesResource, MessageService, SrxMessage.apply)
+      executeRequest(req, None, messagesResource, MessageService, SrxMessage.apply)
 
     case req@PUT -> Root / _ if services(req, messagesResource) =>
       MethodNotAllowed()
@@ -74,6 +79,34 @@ object AdminServer extends SrxServer {
 
     case req@DELETE -> Root / `messagesResource` / _ =>
       MethodNotAllowed()
+
+
+    /* ZONE CONFIG */
+
+    case req@GET -> Root / _ if services(req, zoneConfigResource) =>
+      MethodNotAllowed()
+
+    case req@GET -> Root / `zoneConfigResource` / _ =>
+      executeRequest(req, None, zoneConfigResource, ZoneConfig)
+
+    case req@POST -> Root / _ if services(req, zoneConfigResource) =>
+      MethodNotAllowed()
+
+    case req@POST -> Root / `zoneConfigResource` / _ =>
+      MethodNotAllowed()
+
+    case req@PUT -> Root / _ if services(req, zoneConfigResource) =>
+      MethodNotAllowed()
+
+    case req@PUT -> Root / `zoneConfigResource` / _ =>
+      MethodNotAllowed()
+
+    case req@DELETE -> Root / _ if services(req, zoneConfigResource) =>
+      MethodNotAllowed()
+
+    case req@DELETE -> Root / `zoneConfigResource` / _ =>
+      MethodNotAllowed()
+
 
     case _ =>
       NotFound()

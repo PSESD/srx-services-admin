@@ -187,6 +187,17 @@ class AdminServerTests extends FunSuite {
     }
   }
 
+  test("query zone config") {
+    if(Environment.isLocal) {
+      val resource = "zoneconfig/test"
+      val sifRequest = new SifRequest(TestValues.sifProvider, resource)
+      sifRequest.generatorId = Some(generatorId)
+      val response = new SifConsumer().query(sifRequest)
+      // printlnResponse(response)
+      assert(response.statusCode.equals(SifHttpStatusCode.Ok))
+    }
+  }
+
   private def delayedInterrupt(delay: Long) {
     delayedInterrupt(Thread.currentThread, delay)
   }
