@@ -189,7 +189,7 @@ class AdminServerTests extends FunSuite {
 
   test("query zone config") {
     if(Environment.isLocal) {
-      val resource = "zoneconfig/test"
+      val resource = "srxZoneConfig/test"
       val sifRequest = new SifRequest(TestValues.sifProvider, resource)
       sifRequest.generatorId = Some(generatorId)
       val response = new SifConsumer().query(sifRequest)

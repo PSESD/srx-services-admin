@@ -20,7 +20,7 @@ object AdminServer extends SrxServer {
 
   private final val ServerUrlKey = "SERVER_URL"
   private val messagesResource = CoreResource.SrxMessages.toString
-  private val zoneConfigResource = "zoneconfig"
+  private val zoneConfigResource = "srxZoneConfig"
 
   val sifProvider: SifProvider = new SifProvider(
     SifProviderUrl(Environment.getProperty(ServerUrlKey)),
