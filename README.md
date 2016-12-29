@@ -9,7 +9,7 @@ Provides message logging and configuration data for all SRX components and servi
 Variable | Description | Example
 -------- | ----------- | -------
 AES_PASSWORD | Password used to decrypt AES encrypted request body payloads. |  (see Heroku)
-AES_SALT | Password used to decrypt AES encrypted request body payloads. | (see Heroku)
+AES_SALT | Salt used to decrypt AES encrypted request body payloads. | (see Heroku)
 AMAZON_S3_ACCESS_KEY | AWS S3 access key for SRX cache. | (see Heroku)
 AMAZON_S3_BUCKET_NAME | AWS S3 bucket name for SRX cache. | (see Heroku)
 AMAZON_S3_PATH | Root path to files within SRX cache. | (see Heroku)
@@ -72,7 +72,7 @@ This includes:
  * srx-converters-*
 
 Each service that uses srx-shared-core (which includes all those listed above) sends a server start and stop message to Admin.
-In addition, each of the above services also utilizes the core SrxMessageService to submit messages to Admin describing usage activity specific to each service. For example: Querying a student xSRE, or updating a student consent form in PRS.
+In addition, each of the above services also utilizes the core SrxMessageService to submit messages to Admin describing usage activity specific to each service. For example: querying a student xSRE, or updating a student consent form in PRS.
 
 Each service that requires zone-specific configuration also queries the Admin service for this data.
 
