@@ -32,7 +32,7 @@ object MessageService extends SrxResourceService {
   )
 
   def delete(parameters: List[SifRequestParameter]): SrxResourceResult = {
-    SrxResourceErrorResult(SifHttpStatusCode.MethodNotAllowed, new SrxRequestActionNotAllowedException(SifRequestAction.Delete, CoreResource.SrxMessages.toString))
+    SrxResourceErrorResult(SifHttpStatusCode.MethodNotAllowed, new SrxRequestActionNotAllowedException(SifRequestAction.Delete, SrxResourceType.SrxMessages.toString))
   }
 
   def create(resource: SrxResource, parameters: List[SifRequestParameter]): SrxResourceResult = {
@@ -97,7 +97,7 @@ object MessageService extends SrxResourceService {
         datasource.close()
         if (result.success) {
           if (result.rows.isEmpty) {
-            SrxResourceErrorResult(SifHttpStatusCode.NotFound, new SrxResourceNotFoundException(CoreResource.SrxMessages.toString))
+            SrxResourceErrorResult(SifHttpStatusCode.NotFound, new SrxResourceNotFoundException(SrxResourceType.SrxMessages.toString))
           } else {
             MessageResult(SifRequestAction.Query, SifHttpStatusCode.Ok, result)
           }
@@ -112,7 +112,7 @@ object MessageService extends SrxResourceService {
   }
 
   def update(resource: SrxResource, parameters: List[SifRequestParameter]): SrxResourceResult = {
-    SrxResourceErrorResult(SifHttpStatusCode.MethodNotAllowed, new SrxRequestActionNotAllowedException(SifRequestAction.Update, CoreResource.SrxMessages.toString))
+    SrxResourceErrorResult(SifHttpStatusCode.MethodNotAllowed, new SrxRequestActionNotAllowedException(SifRequestAction.Update, SrxResourceType.SrxMessages.toString))
   }
 
   def getMessagesFromDataResult(result: DatasourceResult): List[SrxMessage] = {
